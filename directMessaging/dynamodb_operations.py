@@ -4,7 +4,7 @@ import boto3
 dynamodb = boto3.resource('dynamodb')
 
 # Create the DynamoDB table.
-def create_movie_table(dynamodb=None):
+def create_directMessages_table(dynamodb=None):
     if not dynamodb:
         dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
     
@@ -14,21 +14,13 @@ def create_movie_table(dynamodb=None):
             {
                 'AttributeName': 'messageId',
                 'KeyType': 'HASH'
-            },
-            {
-                'AttributeName': 'quick-reply',
-                'KeyType': 'RANGE'
             }
         ],
         AttributeDefinitions=[
             {
                 'AttributeName': 'messageId',
                 'AttributeType': 'S'
-            },
-            {
-                'AttributeName': 'quick-reply',
-                'AttributeType': 'N'
-            },
+            }
         ],
         ProvisionedThroughput={
             'ReadCapacityUnits': 5,
@@ -36,6 +28,14 @@ def create_movie_table(dynamodb=None):
         }
     )
     return table
+
+
+def delete_directMessages_table(dynamodb=None):
+    if not dynamodb:
+        dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+
+    table = dynamodb.Table('directMessages')
+    table.delete()
 
 
 #Put items into the directMessages table.

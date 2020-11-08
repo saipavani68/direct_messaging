@@ -2,15 +2,66 @@
 
 # See <https://code-maven.com/using-templates-in-flask>
 from flask import Flask, request, jsonify, g
+import datetime;
 import logging
-from dynamodb_operations import create_movie_table, create_items
+import boto3
+import uuid
+from pprint import pprint
+from dynamodb_operations import create_directMessages_table, create_items, delete_directMessages_table
+from botocore.exceptions import ClientError
 
 app = Flask(__name__)
 
+dynamodb = boto3.resource('dynamodb', region_name='us-west-2')
+
 @app.cli.command('init')
 def init_db():
-    app.logger.info('inside direct messaging')
     with app.app_context():
-       direct_mesages_table = create_movie_table()
-       app.logger.info("Table status:", direct_mesages_table.table_status)
-       create_items(direct_mesages_table)
+        app.logger.info('inside direct messaging')
+        #delete_directMessages_table()
+        direct_mesages_table = create_directMessages_table()
+        create_items(direct_mesages_table)
+        
+def get_directMessage(messageId, dynamodb=None):
+    if not dynamodb:
+        dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+
+    table = dynamodb.Table('directMessages')
+
+    try:
+        response = table.get_item(Key={'messageId': messageId})
+    except ClientError as e:
+        print(e.response['Error']['Message'])
+    else:
+        return response['Item']
+
+@app.route('/sendDirectMessage', methods=['POST'])
+def sendDirectMessage(dynamodb=None):
+    query_parameters = request.form
+
+    to = query_parameters.get('to')
+    messageFrom = query_parameters.get('from')
+    message = query_parameters.get('message')
+    
+    if not dynamodb:
+        dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+
+    table = dynamodb.Table('directMessages')
+    messageId = uuid.uuid4().hex 
+    response = table.put_item(
+       Item={
+            'messageId': messageId,
+            'to': to,
+            'from': messageFrom,
+            'message': message,
+            'timestamp': datetime.datetime.now().strftime("%d-%b-%Y (%H:%M:%S.%f)") #timestamp datatype not supported in dynamodb so converting it to string
+        }
+    )
+    return response
+
+
+if __name__ == '__main__':
+    directMessage = get_directMessage("101")
+    if directMessage:
+        print("Get directMessage succeeded:")
+        pprint(directMessage)
