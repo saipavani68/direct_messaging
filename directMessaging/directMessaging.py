@@ -2,7 +2,8 @@
 
 # See <https://code-maven.com/using-templates-in-flask>
 from flask import Flask, request, jsonify, g
-import datetime;
+import requests
+import datetime
 import logging
 import boto3
 import uuid
@@ -47,16 +48,27 @@ def sendDirectMessage(dynamodb=None):
         dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
 
     table = dynamodb.Table('directMessages')
-    messageId = uuid.uuid4().hex 
-    response = table.put_item(
-       Item={
-            'messageId': messageId,
-            'to': to,
-            'from': messageFrom,
-            'message': message,
-            'timestamp': datetime.datetime.now().strftime("%d-%b-%Y (%H:%M:%S.%f)") #timestamp datatype not supported in dynamodb so converting it to string
-        }
-    )
+    messageId = uuid.uuid4().hex
+     
+    try: 
+        if to == '' or to == None or messageFrom == None or messageFrom == '' or message == None or message == '':
+            return jsonify({"statusCode": 400, "error": "Bad Request", "message": "Invalid parameter(s)" })
+        else:
+            response = table.put_item(
+            Item={
+                    'messageId': messageId,
+                    'to': to,
+                    'from': messageFrom,
+                    'message': message,
+                    'timestamp': datetime.datetime.now().strftime("%d-%b-%Y (%H:%M:%S.%f)") #timestamp datatype not supported in dynamodb so converting it to string
+                }
+            )
+    except requests.exceptions.RequestException as e:
+        return flask.json.jsonify({
+            'method': e.request.method,
+            'url': e.request.url,
+            'exception': type(e).__name__,
+        })
     return response
 
 
