@@ -72,6 +72,47 @@ def sendDirectMessage(dynamodb=None):
     return response
 
 
+@app.route('/replyToDirectMessage', methods=['POST'])
+def replyToDirectMessage(dynamodb=None):
+    query_parameters = request.form
+
+    inReplyToMessageId = query_parameters.get('in-reply-to')
+    app.logger.info(query_parameters.get('in-reply-to'))
+    if 'quick-reply' in query_parameters and 'quick-replies' in query_parameters:
+        quickReply = query_parameters.get('quick-reply')
+        quickReplies = query_parameters.get('quick-replies')
+        if quickReply !=None and quickReply != '' and quickReplies:
+            message = { "quick-reply": quickReply, "quickReplies": quickReplies }
+    else:
+        message = query_parameters.get('reply')
+    
+    if not dynamodb:
+        dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+
+    table = dynamodb.Table('directMessages')
+    messageId = uuid.uuid4().hex
+     
+    try: 
+        if inReplyToMessageId == '' or inReplyToMessageId == None or message == '' or message == None:
+            return jsonify({"statusCode": 400, "error": "Bad Request", "message": "Invalid parameter(s)" })
+        else:
+            response = table.put_item(
+            Item={
+                    'messageId': messageId,
+                    'in-reply-to': inReplyToMessageId,
+                    'message' : message,
+                    'timestamp': datetime.datetime.now().strftime("%d-%b-%Y (%H:%M:%S.%f)") #timestamp datatype not supported in dynamodb so converting it to string
+                }
+            )
+    except requests.exceptions.RequestException as e:
+        return flask.json.jsonify({
+            'method': e.request.method,
+            'url': e.request.url,
+            'exception': type(e).__name__,
+        })
+    return response
+
+
 if __name__ == '__main__':
     directMessage = get_directMessage("101")
     if directMessage:

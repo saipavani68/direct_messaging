@@ -58,12 +58,14 @@ def create_items(table):
                 'from': 'Sam',
                 'timestamp': '2020-10-06 06:04:47.986880',
                 'in-reply-to': '101',
+                'message': {
                 'quick-replies': [
                     'Thanks Pavani',
                     'Thanks for your feedback Pavani',
                     'Thanks Pavani! Much love'
                 ],
-                'quick-reply': 2
+                'quick-reply': 2 
+                }
             }
         )
         batch.put_item(
