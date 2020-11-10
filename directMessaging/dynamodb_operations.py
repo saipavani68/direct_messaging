@@ -20,7 +20,7 @@ def create_directMessages_table(dynamodb=None):
             {
                 'AttributeName': 'messageId',
                 'AttributeType': 'S'
-            }
+            }   
         ],
         ProvisionedThroughput={
             'ReadCapacityUnits': 5,

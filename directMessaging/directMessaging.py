@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 
 # See <https://code-maven.com/using-templates-in-flask>
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify, g, Response
 import requests
+import json
 import datetime
 import logging
 import boto3
+from boto3.dynamodb.conditions import Key
 import uuid
 from pprint import pprint
 from dynamodb_operations import create_directMessages_table, create_items, delete_directMessages_table
 from botocore.exceptions import ClientError
+import decimal
 
 app = Flask(__name__)
 
@@ -23,18 +26,28 @@ def init_db():
         direct_mesages_table = create_directMessages_table()
         create_items(direct_mesages_table)
         
-def get_directMessage(messageId, dynamodb=None):
+#This class is used for encoding decimals to integers when dumping a list to JSON:
+#Inspired from "https://www.reddit.com/r/aws/comments/bwvio8/dynamodb_has_been_storing_integers_as/"
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, decimal.Decimal):
+            return int(obj)
+        return super(DecimalEncoder, self).default(obj)
+
+@app.route('/listRepliesTo',methods=['GET'])
+def listRepliesTo(dynamodb=None):
+    query_parameters=request.args
+    messageId=query_parameters.get('messageId')
     if not dynamodb:
         dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
-
-    table = dynamodb.Table('directMessages')
-
-    try:
-        response = table.get_item(Key={'messageId': messageId})
-    except ClientError as e:
-        print(e.response['Error']['Message'])
-    else:
-        return response['Item']
+    
+    table = dynamodb.Table('directMessages') 
+    scan_kwargs = {
+        'FilterExpression': Key('in-reply-to').eq(messageId)
+    }
+    response = table.scan(**scan_kwargs)
+    app.logger.info(response['Items'])
+    return json.dumps(response['Items'], cls=DecimalEncoder)
 
 @app.route('/sendDirectMessage', methods=['POST'])
 def sendDirectMessage(dynamodb=None):
@@ -81,7 +94,7 @@ def replyToDirectMessage(dynamodb=None):
     if 'quick-reply' in query_parameters and 'quick-replies' in query_parameters:
         quickReply = query_parameters.get('quick-reply')
         quickReplies = query_parameters.get('quick-replies')
-        if quickReply !=None and quickReply != '' and quickReplies:
+        if quickReply != None and quickReply != '' and quickReplies:
             message = { "quick-reply": quickReply, "quickReplies": quickReplies }
     else:
         message = query_parameters.get('reply')
@@ -113,8 +126,3 @@ def replyToDirectMessage(dynamodb=None):
     return response
 
 
-if __name__ == '__main__':
-    directMessage = get_directMessage("101")
-    if directMessage:
-        print("Get directMessage succeeded:")
-        pprint(directMessage)
