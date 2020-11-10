@@ -15,7 +15,7 @@ from botocore.exceptions import ClientError
 import decimal
 
 app = Flask(__name__)
-
+endpoint_url= "http://localhost:8000"
 dynamodb = boto3.resource('dynamodb', region_name='us-west-2')
 
 @app.cli.command('init')
@@ -39,7 +39,7 @@ def listRepliesTo(dynamodb=None):
     query_parameters=request.args
     messageId=query_parameters.get('messageId')
     if not dynamodb:
-        dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+        dynamodb = boto3.resource('dynamodb', endpoint_url=endpoint_url)
     
     table = dynamodb.Table('directMessages') 
     scan_kwargs = {
@@ -58,7 +58,7 @@ def sendDirectMessage(dynamodb=None):
     message = query_parameters.get('message')
     
     if not dynamodb:
-        dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+        dynamodb = boto3.resource('dynamodb', endpoint_url=endpoint_url)
 
     table = dynamodb.Table('directMessages')
     messageId = uuid.uuid4().hex
@@ -100,7 +100,7 @@ def replyToDirectMessage(dynamodb=None):
         message = query_parameters.get('reply')
     
     if not dynamodb:
-        dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+        dynamodb = boto3.resource('dynamodb', endpoint_url=endpoint_url)
 
     table = dynamodb.Table('directMessages')
     messageId = uuid.uuid4().hex
