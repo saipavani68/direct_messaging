@@ -49,6 +49,21 @@ def listRepliesTo(dynamodb=None):
     app.logger.info(response['Items'])
     return json.dumps(response['Items'], cls=DecimalEncoder)
 
+@app.route('/listDirectMessagesFor',methods=['GET'])
+def listDirectMessagesFor(dynamodb=None):
+    query_parameters=request.args
+    username=query_parameters.get('username')
+    if not dynamodb:
+        dynamodb = boto3.resource('dynamodb', endpoint_url=endpoint_url)
+    
+    table = dynamodb.Table('directMessages') 
+    scan_kwargs = {
+        'FilterExpression': Key('to').eq(username)
+    }
+    response = table.scan(**scan_kwargs)
+    app.logger.info(response['Items'])
+    return json.dumps(response['Items'], cls=DecimalEncoder)
+
 @app.route('/sendDirectMessage', methods=['POST'])
 def sendDirectMessage(dynamodb=None):
     query_parameters = request.form
