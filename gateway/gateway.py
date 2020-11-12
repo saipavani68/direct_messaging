@@ -53,7 +53,7 @@ def requires_basic_auth(f):
     return decorated
 
 @app.errorhandler(404)
-@requires_basic_auth
+#@requires_basic_auth            // Uncomment this line of code to enable basic auth
 def route_page(err):
     
     app.logger.info(flask.request.full_path)
