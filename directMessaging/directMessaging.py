@@ -21,8 +21,12 @@ dynamodb = boto3.resource('dynamodb', region_name='us-west-2')
 @app.cli.command('init')
 def init_db():
     with app.app_context():
-        app.logger.info('inside direct messaging')
-        #delete_directMessages_table()
+        app.logger.info('inside direct messaging init command')
+        client = boto3.client('dynamodb', endpoint_url=endpoint_url)
+        listOfTables = client.list_tables()
+        if 'directMessages' in listOfTables['TableNames']:
+            delete_directMessages_table()
+        
         direct_mesages_table = create_directMessages_table()
         create_items(direct_mesages_table)
         
