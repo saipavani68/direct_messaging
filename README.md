@@ -45,7 +45,7 @@ The following are the steps to run the project:
 
      > sudo apt install --yes python3-boto3
 
-6. Then cd into the directMessaging folder in another terminal(other than the dynamodb one)
+7. Then cd into the directMessaging folder in another terminal(other than the dynamodb one)
     Run the following commands:
     
     > flask init (This command should also be run in gateway folder if users or timelines microservice is being used to connect to schema.db
@@ -53,4 +53,5 @@ The following are the steps to run the project:
     > foreman start -m gateway=1,app=3,timelines=3,directMessaging=3 (Starting an instance of gateway and 3 instances each of timelines and app)
 
 
-   
+8. Since Api Gateway is being used for redirecting requests to the respective server instances of each microservice, we can test our apis using http://localhost:5000 which further redirects requests to nodes with ports 5300, 5301, 5302 as defined in routes.cfg
+
