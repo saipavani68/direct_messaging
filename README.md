@@ -32,9 +32,13 @@ The following are the steps to run the project:
     For configuring AWS CLI you can use the below command:
     
      > $ aws configure
+     
      > AWS Access Key ID [None]: fakeMyKeyId (sample)
+     
      > AWS Secret Access Key [None]: fakeSecretAccessKey (sample)
+     
      > Default region name [None]: us-west-2 (sample)
+     
      > Default output format [None]: table
  
 6.  Install Boto3
