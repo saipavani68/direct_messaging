@@ -30,6 +30,10 @@ timelines = app.config['TIMELINES']
 timelinesNodesList = timelines['nodes']
 timelinesNodes = itertools.cycle(timelinesNodesList)
 timelinesApiResources = timelines['endpoints']
+directMessaging = app.config['DIRECTMESSAGING']
+directMessagingNodesList = directMessaging['nodes']
+directMessagingNodes = itertools.cycle(directMessagingNodesList)
+directMessagingApiResources = timelines['endpoints']
 
 def check_credentials(username, password):
     response = authenticateUser(username, password)
@@ -59,8 +63,10 @@ def route_page(err):
     app.logger.info(flask.request.full_path)
     if flask.request.full_path in userApiResources:
         curr_node = next(userNodes)
-    else:
+    elif flask.request.full_path in timelinesApiResources:
         curr_node = next(timelinesNodes)
+    else:
+        curr_node = next(directMessagingNodes)
     # Each time you can see the log that the curr_node is changed from the list of nodes
     app.logger.info(curr_node)
     try:
