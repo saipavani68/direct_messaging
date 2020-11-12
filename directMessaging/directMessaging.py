@@ -24,6 +24,8 @@ def init_db():
         app.logger.info('inside direct messaging init command')
         client = boto3.client('dynamodb', endpoint_url=endpoint_url)
         listOfTables = client.list_tables()
+        
+        #Checks if table already exists
         if 'directMessages' in listOfTables['TableNames']:
             delete_directMessages_table()
         
@@ -42,31 +44,41 @@ class DecimalEncoder(json.JSONEncoder):
 def listRepliesTo(dynamodb=None):
     query_parameters=request.args
     messageId=query_parameters.get('messageId')
-    if not dynamodb:
-        dynamodb = boto3.resource('dynamodb', endpoint_url=endpoint_url)
     
-    table = dynamodb.Table('directMessages') 
-    scan_kwargs = {
-        'FilterExpression': Key('in-reply-to').eq(messageId)
-    }
-    response = table.scan(**scan_kwargs)
-    app.logger.info(response['Items'])
-    return json.dumps(response['Items'], cls=DecimalEncoder)
+    #Returns 400 error when messageId is not provided.
+    if messageId == '' or messageId == None:
+        return jsonify({"statusCode": 400, "error": "Bad Request", "message": "Invalid parameter" })
+    else:
+        if not dynamodb:
+            dynamodb = boto3.resource('dynamodb', endpoint_url=endpoint_url)
+        
+        table = dynamodb.Table('directMessages') 
+        scan_kwargs = {
+            'FilterExpression': Key('in-reply-to').eq(messageId)
+        }
+        response = table.scan(**scan_kwargs)
+        app.logger.info(response['Items'])
+        return json.dumps(response['Items'], cls=DecimalEncoder)
 
 @app.route('/listDirectMessagesFor',methods=['GET'])
 def listDirectMessagesFor(dynamodb=None):
     query_parameters=request.args
     username=query_parameters.get('username')
-    if not dynamodb:
-        dynamodb = boto3.resource('dynamodb', endpoint_url=endpoint_url)
-    
-    table = dynamodb.Table('directMessages') 
-    scan_kwargs = {
-        'FilterExpression': Key('to').eq(username)
-    }
-    response = table.scan(**scan_kwargs)
-    app.logger.info(response['Items'])
-    return json.dumps(response['Items'], cls=DecimalEncoder)
+     
+    #Returns 400 error when username is not provided.
+    if username == '' or username == None:
+        return jsonify({"statusCode": 400, "error": "Bad Request", "message": "Invalid parameter" })
+    else:
+        if not dynamodb:
+            dynamodb = boto3.resource('dynamodb', endpoint_url=endpoint_url)
+        
+        table = dynamodb.Table('directMessages') 
+        scan_kwargs = {
+            'FilterExpression': Key('to').eq(username)
+        }
+        response = table.scan(**scan_kwargs)
+        app.logger.info(response['Items'])
+        return json.dumps(response['Items'], cls=DecimalEncoder)
 
 @app.route('/sendDirectMessage', methods=['POST'])
 def sendDirectMessage(dynamodb=None):
