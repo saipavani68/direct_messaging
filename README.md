@@ -1,4 +1,4 @@
-# Project5 - CPSC 449 Web Back-End Engineering - Fall 2020
+# CPSC 449 Web Back-End Engineering - Fall 2020
 Guided by Professor: Kenytt Avery @ProfAvery
 # Project description: 
 In this Project, a microservice is created for private Direct Messaging between users as like in Twitter. This microservice is written as a separate Flask application connected to an instance of Amazon's DynamoDB Local.
